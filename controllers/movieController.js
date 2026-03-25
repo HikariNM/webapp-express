@@ -16,7 +16,7 @@ function show(req, res) {
     const sqlQuery = 'SELECT * FROM movies WHERE id = ?';
     const relationsQuery = `
     SELECT 
-    reviews.text
+    reviews.text, reviews.name, reviews.vote, reviews.id
     FROM movies
     JOIN reviews
     ON movies.id = reviews.movie_id
@@ -36,8 +36,8 @@ function show(req, res) {
                 console.error('errore 2')
                 return res.status(500).json({ error: "DB Error", message: "Error retrieving data from the database" });
             }
-            movie.text = result.map(rec => rec.text);
-            // console.log(movie);
+            movie.text = result;
+            console.log(movie);
             res.json(movie);
         })
     })

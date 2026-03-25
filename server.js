@@ -9,7 +9,7 @@ const errorsHandler = require('./middlewares/errorsHandler');
 
 app.use(cors({ origin: process.env.FE_URL }));
 
-app.use(express.static('public'));
+app.use('/static/', express.static('public'));
 app.use(express.json());
 
 app.get('/', (req, res) => {
