@@ -3,11 +3,11 @@ const db = require('../data/db');
 function index(req, res) {
     const sqlQuery = 'SELECT * FROM movies'
 
-    db.query(sqlQuery, (err, res) => {
+    db.query(sqlQuery, (err, result) => {
         if (err) {
             return res.status(500).json({ error: "DB Error", message: "Error retrieving data from the database" });
         }
-        res.json(res)
+        res.json(result)
     })
 }
 
