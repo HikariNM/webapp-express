@@ -30,6 +30,12 @@ function show(req, res) {
     where movie_id = ?;
     `;
 
+    const countQuery = `
+    SELECT 
+    COUNT(*) as 'count'
+    FROM movies;
+    `;
+
     const paramsQuery = [id];
 
     db.query(sqlQuery, paramsQuery, (err, row) => {
@@ -40,7 +46,6 @@ function show(req, res) {
 
         db.query(relationsQuery, paramsQuery, (err, result) => {
             if (err) {
-                console.error('errore 2')
                 return res.status(500).json({ error: "DB Error", message: "Error retrieving data from the database" });
             }
             movie.text = result;
@@ -51,8 +56,16 @@ function show(req, res) {
                     return res.status(500).json({ error: "DB Error", message: "Error retrieving data from the database" });
                 }
                 movie.vote = avg[0]['AVG'];
-                // console.log(movie);
-                res.json(movie);
+
+                db.query(countQuery, (err, count) => {
+                    if (err) {
+                        console.error(err)
+                        return res.status(500).json({ error: "DB Error", message: "Error retrieving data from the database" });
+                    }
+                    movie.count = count[0].count;
+                    // console.log(movie.count);
+                    res.json(movie);
+                })
             })
 
 
