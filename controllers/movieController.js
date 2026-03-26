@@ -22,8 +22,15 @@ function show(req, res) {
     ON movies.id = reviews.movie_id
     WHERE movies.id = ?;
     `;
-    const paramsQuery = [id];
 
+    const secondRelationQuery = `
+    SELECT 
+    Round(AVG(vote),1) as 'AVG'
+    FROM reviews
+    where movie_id = ?;
+    `;
+
+    const paramsQuery = [id];
 
     db.query(sqlQuery, paramsQuery, (err, row) => {
         if (err) {
@@ -37,9 +44,21 @@ function show(req, res) {
                 return res.status(500).json({ error: "DB Error", message: "Error retrieving data from the database" });
             }
             movie.text = result;
-            console.log(movie);
-            res.json(movie);
+            // console.log(movie);
+
+            db.query(secondRelationQuery, paramsQuery, (err, avg) => {
+                if (err) {
+                    return res.status(500).json({ error: "DB Error", message: "Error retrieving data from the database" });
+                }
+                movie.vote = avg[0]['AVG'];
+                // console.log(movie);
+                res.json(movie);
+            })
+
+
         })
+
+
     })
 
 }
