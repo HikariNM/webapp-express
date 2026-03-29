@@ -13,21 +13,20 @@ function index(req, res) {
 
 function show(req, res) {
     const id = Number(req.params.id)
-    const sqlQuery = 'SELECT * FROM movies WHERE id = ?';
+    const sqlQuery = `
+    SELECT 
+    movies.* ,
+    ROUND(AVG(reviews.vote)) AS average_review
+    FROM movies
+    LEFT JOIN reviews
+    ON reviews.movie_id = movies.id
+    WHERE movies.id =  ?;
+    `;
     const relationsQuery = `
     SELECT 
-    reviews.text, reviews.name, reviews.vote, reviews.id
-    FROM movies
-    JOIN reviews
-    ON movies.id = reviews.movie_id
-    WHERE movies.id = ?;
-    `;
-
-    const secondRelationQuery = `
-    SELECT 
-    Round(AVG(vote),1) as 'AVG'
+    *
     FROM reviews
-    where movie_id = ?;
+    WHERE movie_id = ?;
     `;
 
     const countQuery = `
@@ -51,29 +50,39 @@ function show(req, res) {
             movie.text = result;
             // console.log(movie);
 
-            db.query(secondRelationQuery, paramsQuery, (err, avg) => {
+            db.query(countQuery, (err, count) => {
                 if (err) {
+                    console.error(err)
                     return res.status(500).json({ error: "DB Error", message: "Error retrieving data from the database" });
                 }
-                movie.vote = avg[0]['AVG'];
-
-                db.query(countQuery, (err, count) => {
-                    if (err) {
-                        console.error(err)
-                        return res.status(500).json({ error: "DB Error", message: "Error retrieving data from the database" });
-                    }
-                    movie.count = count[0].count;
-                    // console.log(movie.count);
-                    res.json(movie);
-                })
+                movie.archiveLength = count[0].count;
+                res.json(movie);
             })
-
-
         })
-
-
     })
-
 }
 
-module.exports = { index, show };
+function storeRev(req, res) {
+    const { id } = req.params;
+    const { name, vote, text } = req.body;
+
+    const sqlQuery = `
+    INSERT 
+    INTO reviews(name, vote, text, movie_id) 
+    VALUES(?,?,?,?);
+    `;
+
+    // const paramsQuery = [name, vote, text, id];
+
+    db.query(sqlQuery, [name, vote, text, id], (err, result) => {
+        if (err) {
+            return res.status(500).json({
+                error: "Database query error",
+                message: err.message
+            });
+        }
+        res.status(201).json({ message: `Review successuflly added with id ${result.insertId}`, id: result.insertId })
+    })
+}
+
+module.exports = { index, show, storeRev };
